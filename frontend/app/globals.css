@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties ─────────────────────────────────────────────────── */
+:root {
+  --brand:        #6366f1;
+  --brand-dark:   #4f46e5;
+  --surface:      #0f0f1a;
+  --surface-card: #16162a;
+  --surface-border:#2a2a45;
+  --surface-muted: #1e1e35;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted:   #475569;
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-surface text-slate-100 font-sans antialiased;
+    background-color: var(--surface);
+  }
+  /* Focus-visible rings for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-surface;
+  }
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+}
+
+/* ─── Reusable Component Classes ─────────────────────────────────────────────── */
+@layer components {
+  /* Glass card */
+  .glass-card {
+    @apply bg-surface-card border border-surface-border rounded-2xl;
+    background: linear-gradient(135deg, rgba(22,22,42,0.95) 0%, rgba(15,15,26,0.95) 100%);
+    backdrop-filter: blur(16px);
+  }
+
+  /* Gradient brand button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white
+           bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600
+           transition-all duration-200 shadow-lg shadow-brand-600/25 hover:shadow-brand-600/40
+           focus-visible:ring-2 focus-visible:ring-brand-500;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium
+           text-slate-300 hover:text-white hover:bg-surface-muted border border-surface-border
+           transition-all duration-200;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl bg-surface-muted border border-surface-border
+           text-slate-100 placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+           transition-all duration-200;
+  }
+
+  /* Section label */
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-brand-400;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface-muted) 25%, var(--surface-border) 50%, var(--surface-muted) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Hero Gradient ──────────────────────────────────────────────────────────── */
+.hero-glow {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.35), transparent);
+}
+
+/* ─── Animated gradient orbs ─────────────────────────────────────────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+}
