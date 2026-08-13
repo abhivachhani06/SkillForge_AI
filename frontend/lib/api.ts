@@ -35,7 +35,7 @@ import type {
 
 // ─── Feature flag ─────────────────────────────────────────────────────────────
 // Set to false once a real endpoint is confirmed with the backend team.
-const USE_MOCKS = true;
+const USE_MOCKS = false;
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 

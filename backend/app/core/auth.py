@@ -1,4 +1,6 @@
 import jwt
+from jwt import PyJWKClient
+from datetime import timedelta
 from uuid import UUID
 from fastapi import Header, HTTPException, status
 from pydantic import BaseModel
@@ -13,6 +15,7 @@ def get_current_user(authorization: str = Header(...)) -> CurrentUser:
     """
     FastAPI dependency to verify Supabase JWT.
     Expects header format: Authorization: Bearer <token>
+    Supports both HS256 (symmetric) and ES256 (asymmetric) algorithms.
     """
     if not authorization.startswith("Bearer ") and not authorization.startswith("bearer "):
         raise HTTPException(
@@ -23,14 +26,31 @@ def get_current_user(authorization: str = Header(...)) -> CurrentUser:
     token = authorization.split(" ", 1)[1]
     
     try:
-        # Decode using the Supabase JWT secret
-        # Disable audience verification to prevent local development environment mismatches
-        payload = jwt.decode(
-            token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            options={"verify_aud": False}
-        )
+        # Check unverified header to see what algorithm is used
+        unverified_header = jwt.get_unverified_header(token)
+        alg = unverified_header.get("alg", "HS256")
+        
+        if alg == "ES256":
+            # Asymmetric key verification using JWKS endpoint
+            jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+            jwks_client = PyJWKClient(jwks_url)
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
+            payload = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["ES256"],
+                options={"verify_aud": False},
+                leeway=timedelta(seconds=60)
+            )
+        else:
+            # Symmetric key verification using local secret
+            payload = jwt.decode(
+                token,
+                settings.SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                options={"verify_aud": False},
+                leeway=timedelta(seconds=60)
+            )
         
         user_id = payload.get("sub")
         email = payload.get("email")

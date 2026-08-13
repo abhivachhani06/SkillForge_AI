@@ -9,3 +9,4 @@ huggingface-hub>=0.20.0
 pymupdf>=1.22.0
 python-docx>=0.8.11
 python-multipart>=0.0.18
+cryptography>=41.0.0
