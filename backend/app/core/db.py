@@ -13,10 +13,12 @@ if db_url.startswith("postgres://"):
 # Configure database engine
 engine = create_engine(
     db_url,
-    pool_size=10,
-    max_overflow=20,
-    pool_recycle=1800,
-    pool_pre_ping=True
+    pool_size=2,
+    max_overflow=5,
+    pool_recycle=300,
+    pool_pre_ping=True,
+    pool_timeout=30,
+    connect_args={"connect_timeout": 10},
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
