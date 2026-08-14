@@ -8,8 +8,6 @@ import {
 import { clsx } from "clsx";
 import Navbar from "@/components/Navbar";
 import { CardSkeleton } from "@/components/LoadingSkeleton";
-import ErrorState from "@/components/ErrorState";
-import EmptyState from "@/components/EmptyState";
 import { getRecommendations } from "@/lib/api";
 import type { Recommendation } from "@/lib/types";
 
@@ -81,18 +79,11 @@ export default function RecommendationsPage() {
   const [recs,    setRecs]    = useState<Recommendation[]>([]);
   const [filter,  setFilter]  = useState<FilterType>("all");
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
 
   const load = async () => {
     setLoading(true);
-    setError("");
-    try {
-      setRecs(await getRecommendations());
-    } catch (e: any) {
-      setError(e.message ?? "Failed to load recommendations");
-    } finally {
-      setLoading(false);
-    }
+    setRecs(await getRecommendations());
+    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -122,7 +113,7 @@ export default function RecommendationsPage() {
         </div>
 
         {/* Filter tabs */}
-        {!loading && !error && recs.length > 0 && (
+        {!loading && recs.length > 0 && (
           <div className="mb-8 flex flex-wrap gap-2" role="tablist" aria-label="Filter recommendations">
             {filterOptions.map(({ value, label }) => (
               <button
@@ -148,21 +139,6 @@ export default function RecommendationsPage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => <CardSkeleton key={i} />)}
           </div>
-        ) : error ? (
-          <ErrorState message={error} onRetry={load} />
-        ) : recs.length === 0 ? (
-          <EmptyState
-            icon="book"
-            title="No recommendations yet"
-            description="Upload your resume and generate a roadmap to get personalized course and project recommendations."
-            cta={{ label: "Upload Resume", href: "/resume-upload" }}
-          />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            icon="question"
-            title={`No ${filter} recommendations`}
-            description="Try a different filter or check back after uploading your resume."
-          />
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((rec, i) => (

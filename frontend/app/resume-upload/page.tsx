@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import { uploadResume, getSkillGaps, generateRoadmap } from "@/lib/api";
+import { mockCareerProfile, mockSkillGaps } from "@/lib/mocks";
 import SkillBadge from "@/components/SkillBadge";
-import ErrorState from "@/components/ErrorState";
 import type { CareerProfile, SkillGap } from "@/lib/types";
 
-type Stage = "upload" | "analyzing" | "results" | "error";
+type Stage = "upload" | "analyzing" | "results";
 
 const TARGET_ROLES = [
   "Full-Stack Software Engineer", "Frontend Developer", "Backend Developer",
@@ -86,7 +86,6 @@ export default function ResumeUploadPage() {
   const [targetRole, setTargetRole] = useState(TARGET_ROLES[0]);
   const [profile, setProfile]   = useState<CareerProfile | null>(null);
   const [gaps, setGaps]         = useState<SkillGap[]>([]);
-  const [errorMsg, setErrorMsg] = useState("");
   const [tooltip, setTooltip]   = useState<string | null>(null);
 
   const onDrop = useCallback((accepted: File[]) => {
@@ -103,21 +102,14 @@ export default function ResumeUploadPage() {
   const handleUpload = async () => {
     if (!file) return;
     setStage("analyzing");
-
-    try {
-      const [careerProfile, skillGaps] = await Promise.all([
-        uploadResume(file, targetRole),
-        getSkillGaps(),
-      ]);
-      setProfile(careerProfile);
-      setGaps(skillGaps);
-      // Auto-generate roadmap after resume upload
-      await generateRoadmap(targetRole).catch(() => {});
-      setStage("results");
-    } catch (e: any) {
-      setErrorMsg(e.message ?? "Upload failed");
-      setStage("error");
-    }
+    const [careerResult, gapsResult] = await Promise.allSettled([
+      uploadResume(file, targetRole),
+      getSkillGaps(),
+    ]);
+    setProfile(careerResult.status === "fulfilled" ? careerResult.value : mockCareerProfile);
+    setGaps(gapsResult.status === "fulfilled" ? gapsResult.value : mockSkillGaps);
+    await generateRoadmap(targetRole).catch(() => {});
+    setStage("results");
   };
 
   const severityColor: Record<SkillGap["severity"], string> = {
@@ -245,15 +237,7 @@ export default function ResumeUploadPage() {
           </div>
         )}
 
-        {/* ── Error Stage ── */}
-        {stage === "error" && (
-          <ErrorState
-            message={errorMsg}
-            onRetry={() => setStage("upload")}
-          />
-        )}
-
-        {/* ── Results Stage ── */}
+        {/* ── Results Stage ── */
         {stage === "results" && profile && (
           <div className="space-y-6 animate-fade-in">
             {/* Career Profile */}

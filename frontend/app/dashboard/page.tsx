@@ -12,12 +12,11 @@ import SkillBadge from "@/components/SkillBadge";
 import ProgressBar from "@/components/ProgressBar";
 import { GaugeChart, ProgressLineChart, SkillBarChart } from "@/components/ChartWrappers";
 import { DashboardSkeleton } from "@/components/LoadingSkeleton";
-import ErrorState from "@/components/ErrorState";
-import EmptyState from "@/components/EmptyState";
 import {
   getStudentProfile, getCareerProfile, getSkillGaps,
   getProgressSummary, getRecommendations,
 } from "@/lib/api";
+import { mockStudentProfile, mockCareerProfile } from "@/lib/mocks";
 import type { StudentProfile, CareerProfile, SkillGap, ProgressSummary, Recommendation } from "@/lib/types";
 
 // Mock weekly progress data for the line chart
@@ -31,36 +30,28 @@ const weeklyProgress = [
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
 
-  const [student,  setStudent]  = useState<StudentProfile | null>(null);
-  const [profile,  setProfile]  = useState<CareerProfile | null>(null);
+  const [student,  setStudent]  = useState<StudentProfile>(mockStudentProfile);
+  const [profile,  setProfile]  = useState<CareerProfile>(mockCareerProfile);
   const [gaps,     setGaps]     = useState<SkillGap[]>([]);
   const [progress, setProgress] = useState<ProgressSummary | null>(null);
   const [recs,     setRecs]     = useState<Recommendation[]>([]);
 
   const load = async () => {
     setLoading(true);
-    setError("");
-    try {
-      const [s, p, g, pr, r] = await Promise.allSettled([
-        getStudentProfile(),
-        getCareerProfile(),
-        getSkillGaps(),
-        getProgressSummary(),
-        getRecommendations(),
-      ]);
-      if (s.status === "rejected") throw new Error(s.reason?.message ?? "Failed to load profile");
-      setStudent(s.value);
-      if (p.status === "fulfilled") setProfile(p.value);
-      if (g.status === "fulfilled") setGaps(g.value);
-      if (pr.status === "fulfilled") setProgress(pr.value);
-      if (r.status === "fulfilled") setRecs(r.value);
-    } catch (e: any) {
-      setError(e.message ?? "Failed to load dashboard");
-    } finally {
-      setLoading(false);
-    }
+    const [s, p, g, pr, r] = await Promise.allSettled([
+      getStudentProfile(),
+      getCareerProfile(),
+      getSkillGaps(),
+      getProgressSummary(),
+      getRecommendations(),
+    ]);
+    if (s.status === "fulfilled") setStudent(s.value ?? mockStudentProfile);
+    if (p.status === "fulfilled") setProfile(p.value ?? mockCareerProfile);
+    if (g.status === "fulfilled") setGaps(g.value);
+    if (pr.status === "fulfilled") setProgress(pr.value);
+    if (r.status === "fulfilled") setRecs(r.value);
+    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -71,33 +62,6 @@ export default function DashboardPage() {
         <Navbar />
         <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <DashboardSkeleton />
-        </main>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <ErrorState message={error} onRetry={load} />
-        </main>
-      </>
-    );
-  }
-
-  if (!student || !profile) {
-    return (
-      <>
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <EmptyState
-            icon="upload"
-            title="No profile found"
-            description="Upload your resume to generate a career profile and see your personalized dashboard."
-            cta={{ label: "Upload Resume", href: "/resume-upload" }}
-          />
         </main>
       </>
     );

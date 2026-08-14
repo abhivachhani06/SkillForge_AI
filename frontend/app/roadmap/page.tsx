@@ -5,8 +5,6 @@ import { Map, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import RoadmapTimeline from "@/components/RoadmapTimeline";
 import { RoadmapSkeleton } from "@/components/LoadingSkeleton";
-import ErrorState from "@/components/ErrorState";
-import EmptyState from "@/components/EmptyState";
 import ProgressBar from "@/components/ProgressBar";
 import { getRoadmap, updateRoadmapTask } from "@/lib/api";
 import type { RoadmapTask } from "@/lib/types";
@@ -14,19 +12,11 @@ import type { RoadmapTask } from "@/lib/types";
 export default function RoadmapPage() {
   const [tasks,   setTasks]   = useState<RoadmapTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
 
   const load = async () => {
     setLoading(true);
-    setError("");
-    try {
-      const data = await getRoadmap();
-      setTasks(data);
-    } catch (e: any) {
-      setError(e.message ?? "Failed to load roadmap");
-    } finally {
-      setLoading(false);
-    }
+    setTasks(await getRoadmap());
+    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -68,7 +58,7 @@ export default function RoadmapPage() {
         </div>
 
         {/* Progress summary */}
-        {!loading && !error && tasks.length > 0 && (
+        {!loading && tasks.length > 0 && (
           <div className="mb-8 glass-card p-5">
             <div className="flex flex-wrap items-center gap-6 mb-4">
               <div className="text-center">
@@ -95,15 +85,6 @@ export default function RoadmapPage() {
         {/* Content */}
         {loading ? (
           <RoadmapSkeleton />
-        ) : error ? (
-          <ErrorState message={error} onRetry={load} />
-        ) : tasks.length === 0 ? (
-          <EmptyState
-            icon="book"
-            title="No roadmap yet"
-            description="Generate your personalized learning roadmap based on your skill gaps and target role."
-            cta={{ label: "Go to Dashboard", href: "/dashboard" }}
-          />
         ) : (
           <RoadmapTimeline tasks={tasks} onStatusChange={handleStatusChange} />
         )}
