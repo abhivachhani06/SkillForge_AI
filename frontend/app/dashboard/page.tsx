@@ -43,18 +43,19 @@ export default function DashboardPage() {
     setLoading(true);
     setError("");
     try {
-      const [s, p, g, pr, r] = await Promise.all([
+      const [s, p, g, pr, r] = await Promise.allSettled([
         getStudentProfile(),
         getCareerProfile(),
         getSkillGaps(),
         getProgressSummary(),
         getRecommendations(),
       ]);
-      setStudent(s);
-      setProfile(p);
-      setGaps(g);
-      setProgress(pr);
-      setRecs(r);
+      if (s.status === "rejected") throw new Error(s.reason?.message ?? "Failed to load profile");
+      setStudent(s.value);
+      if (p.status === "fulfilled") setProfile(p.value);
+      if (g.status === "fulfilled") setGaps(g.value);
+      if (pr.status === "fulfilled") setProgress(pr.value);
+      if (r.status === "fulfilled") setRecs(r.value);
     } catch (e: any) {
       setError(e.message ?? "Failed to load dashboard");
     } finally {

@@ -75,13 +75,14 @@ except ImportError:
 
 # Member 4: Recommendations, Interviews, Mentor, Roadmap Generator
 try:
-    from app.routers import recommend, interview, mentor
+    from app.routers import recommend, interview, mentor, roadmap_ai
     app.include_router(recommend.router)
     app.include_router(interview.router)
     app.include_router(mentor.router)
+    app.include_router(roadmap_ai.router)
     logger.info("Successfully mounted Member 4's real AI & recommendation routers.")
-except ImportError:
-    logger.warning("Member 4's routers not found. Mounting mock AI recommendation & mentor routers...")
+except ImportError as e:
+    logger.error(f"Member 4's routers not found or import error occurred: {e}. Mounting mock AI recommendation & mentor routers...")
     
     mock_ai_router = APIRouter(prefix="/api", tags=["mock-ai"])
     
@@ -121,6 +122,7 @@ except ImportError:
         ]
         
     app.include_router(mock_ai_router)
+
 
 
 @app.get("/")

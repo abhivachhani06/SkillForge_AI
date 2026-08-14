@@ -8,7 +8,7 @@ import {
   AlertCircle, Info, ChevronRight,
 } from "lucide-react";
 import { clsx } from "clsx";
-import { uploadResume, getSkillGaps } from "@/lib/api";
+import { uploadResume, getSkillGaps, generateRoadmap } from "@/lib/api";
 import SkillBadge from "@/components/SkillBadge";
 import ErrorState from "@/components/ErrorState";
 import type { CareerProfile, SkillGap } from "@/lib/types";
@@ -53,6 +53,8 @@ export default function ResumeUploadPage() {
       ]);
       setProfile(careerProfile);
       setGaps(skillGaps);
+      // Auto-generate roadmap after resume upload
+      await generateRoadmap(targetRole).catch(() => {});
       setStage("results");
     } catch (e: any) {
       setErrorMsg(e.message ?? "Upload failed");

@@ -4,13 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, s
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from app.core.db import get_db, Student, Resume, CareerProfile, SkillGap
+from app.core.db import get_db, Student, Resume, CareerProfile, SkillGap, RoadmapTask, Recommendation
 from app.core.auth import get_current_user, CurrentUser
 from app.schemas.career_profile import CareerProfileSchema, SkillGapItem
 from app.services.resume_parser import extract_text
 from app.services.skill_extractor import extract_skills
 from app.services.gap_analysis import analyze_gaps
 from app.routers.students import calculate_and_update_readiness
+from app.routers.roadmap_ai import get_fallback_roadmap
+from app.routers.recommend import get_fallback_recommendations
 
 logger = logging.getLogger("resume_router")
 
@@ -148,6 +150,47 @@ async def upload_resume(
 
     # Calculate and update score (saves to database internally)
     calculate_and_update_readiness(db, current_user.id)
+
+    # 11. Auto-generate roadmap tasks if none exist
+    try:
+        existing_tasks = db.query(RoadmapTask).filter(RoadmapTask.student_id == current_user.id).count()
+        if existing_tasks == 0:
+            roadmap_items = get_fallback_roadmap(db_student.target_role or "Software Engineer")
+            for task in roadmap_items:
+                db.add(RoadmapTask(
+                    student_id=current_user.id,
+                    title=task.get("title", "Learn Skill"),
+                    description=task.get("description", ""),
+                    priority=task.get("priority", "medium"),
+                    estimated_hours=task.get("estimated_hours", 10.0),
+                    prerequisites=task.get("prerequisites", []),
+                    status="pending",
+                    week_number=task.get("week_number", 1)
+                ))
+            db.commit()
+            logger.info(f"Auto-generated {len(roadmap_items)} roadmap tasks for {current_user.id}")
+    except Exception as e:
+        logger.error(f"Auto roadmap generation failed: {e}")
+
+    # 12. Always regenerate recommendations on resume upload
+    try:
+        db.query(Recommendation).filter(Recommendation.student_id == current_user.id).delete()
+        rec_items = get_fallback_recommendations(db_student.target_role or "Software Engineer")
+        for item in rec_items:
+            db.add(Recommendation(
+                student_id=current_user.id,
+                type=item.get("type", "course"),
+                title=item.get("title", "Resource"),
+                description=item.get("description", ""),
+                reason=item.get("reason", ""),
+                difficulty=item.get("difficulty", "intermediate"),
+                estimated_duration=item.get("estimated_duration", ""),
+                expected_outcome=item.get("expected_outcome", "")
+            ))
+        db.commit()
+        logger.info(f"Auto-generated {len(rec_items)} recommendations for {current_user.id}")
+    except Exception as e:
+        logger.error(f"Auto recommendations generation failed: {e}")
 
     return career_profile_schema
 
