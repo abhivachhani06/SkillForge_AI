@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import { uploadResume, getSkillGaps, generateRoadmap } from "@/lib/api";
-import { mockCareerProfile, mockSkillGaps } from "@/lib/mocks";
+import { mockSkillGaps } from "@/lib/mocks";
+import { parseResumeFile } from "@/lib/resumeParser";
 import SkillBadge from "@/components/SkillBadge";
 import type { CareerProfile, SkillGap } from "@/lib/types";
 
@@ -106,7 +107,9 @@ export default function ResumeUploadPage() {
       uploadResume(file, targetRole),
       getSkillGaps(),
     ]);
-    setProfile(careerResult.status === "fulfilled" ? careerResult.value : mockCareerProfile);
+    // If API fails, parse the file directly on the frontend
+    const parsedLocally = careerResult.status === "rejected" ? await parseResumeFile(file) : null;
+    setProfile(careerResult.status === "fulfilled" ? careerResult.value : parsedLocally!);
     setGaps(gapsResult.status === "fulfilled" ? gapsResult.value : mockSkillGaps);
     await generateRoadmap(targetRole).catch(() => {});
     setStage("results");
