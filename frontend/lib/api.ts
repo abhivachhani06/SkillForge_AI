@@ -42,6 +42,14 @@ async function apiFetchWithFallback<T>(path: string, fallback: T, init?: Request
   try { return await apiFetch<T>(path, init); } catch { return fallback; }
 }
 
+// ─── Get real name from Supabase session ──────────────────────────────────────
+export async function getSignedInName(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user?.user_metadata?.full_name
+    || session?.user?.email?.split("@")[0]
+    || "User";
+}
+
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 // ─── Auth helper ─────────────────────────────────────────────────────────────
@@ -70,7 +78,12 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function getStudentProfile(): Promise<StudentProfile> {
   if (USE_MOCKS) { await mockDelay(); return mockStudentProfile; }
-  return apiFetchWithFallback<StudentProfile>("/api/students/me", mockStudentProfile);
+  try {
+    return await apiFetch<StudentProfile>("/api/students/me");
+  } catch {
+    const name = await getSignedInName();
+    return { ...mockStudentProfile, name, email: (await supabase.auth.getSession()).data.session?.user?.email ?? mockStudentProfile.email };
+  }
 }
 
 export async function submitOnboarding(payload: OnboardingPayload): Promise<void> {

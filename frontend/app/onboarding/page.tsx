@@ -2,9 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Zap, ChevronRight, ChevronLeft, Plus, X } from "lucide-react";
-import { submitOnboarding } from "@/lib/api";
+import { Zap, ChevronRight, ChevronLeft, Plus, X, Sparkles } from "lucide-react";
+import { submitOnboarding, uploadResume } from "@/lib/api";
 import type { OnboardingPayload } from "@/lib/types";
+
+const SAMPLE_RESUME_TEXT = `Bhalani Smit
+Email: sbbhalani11@gmail.com | Contact: 9723267639
+Skills: React.js, Node.js, Express.js, Supabase, PostgreSQL, Flutter, JWT, Tailwind CSS, JavaScript
+Education: B.Tech Computer Engineering - CHARUSAT
+Projects: FoodWave (Flutter), Academic Event Management System (React+Node), SocietyOS (React+Node)
+Internships: Python Django (15 days), Flutter (45 days), Algo-Master (25 days)
+`;
+
+function makeSampleFile(): File {
+  const blob = new Blob([SAMPLE_RESUME_TEXT], { type: "text/plain" });
+  return new File([blob], "sample_resume.pdf", { type: "application/pdf" });
+}
 
 // ─── Step definitions ────────────────────────────────────────────────────────
 const STEPS = [
@@ -37,7 +50,8 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep]   = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState("");
+  const [sampleLoading, setSampleLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Form state
   const [education, setEducation]     = useState("");
@@ -79,12 +93,23 @@ export default function OnboardingPage() {
       experience_level: expLevel,
       preferred_learning_hours_per_week: hoursPerWeek,
     };
-    try {
-      await submitOnboarding(payload);
-    } catch {
-      // silently ignore — navigate anyway, resume upload will complete the profile
-    }
+    try { await submitOnboarding(payload); } catch { /* silent */ }
     router.push("/resume-upload");
+  };
+
+  const handleSampleResume = async () => {
+    setSampleLoading(true);
+    const payload: OnboardingPayload = {
+      education,
+      current_skills: skills,
+      interests,
+      target_role: targetRole,
+      experience_level: expLevel,
+      preferred_learning_hours_per_week: hoursPerWeek,
+    };
+    try { await submitOnboarding(payload); } catch { /* silent */ }
+    try { await uploadResume(makeSampleFile(), targetRole); } catch { /* silent */ }
+    router.push("/dashboard");
   };
 
   return (
@@ -289,6 +314,24 @@ export default function OnboardingPage() {
               {error && (
                 <p className="mt-4 text-sm text-rose-400">{error}</p>
               )}
+
+              {/* Sample Resume shortcut */}
+              <div className="mt-4 relative flex items-center gap-3">
+                <div className="flex-1 h-px bg-surface-border" />
+                <span className="text-xs text-slate-500">or skip resume upload</span>
+                <div className="flex-1 h-px bg-surface-border" />
+              </div>
+              <button
+                onClick={handleSampleResume}
+                disabled={sampleLoading}
+                className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-brand-500/40 hover:border-brand-500/70 bg-brand-500/5 px-4 py-3 text-sm text-brand-300 transition-all disabled:opacity-60"
+              >
+                {sampleLoading ? (
+                  <><svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg> Setting up demo…</>
+                ) : (
+                  <><Sparkles size={15} className="text-brand-400" /> Use Sample Resume &amp; go to Dashboard</>  
+                )}
+              </button>
             </div>
           )}
         </div>
