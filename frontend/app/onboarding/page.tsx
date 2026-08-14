@@ -81,11 +81,10 @@ export default function OnboardingPage() {
     };
     try {
       await submitOnboarding(payload);
-      router.push("/resume-upload");
-    } catch (e: any) {
-      setError(e.message ?? "Something went wrong. Please try again.");
-      setLoading(false);
+    } catch {
+      // silently ignore — navigate anyway, resume upload will complete the profile
     }
+    router.push("/resume-upload");
   };
 
   return (
