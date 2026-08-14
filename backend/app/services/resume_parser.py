@@ -43,7 +43,11 @@ def extract_text(file_bytes: bytes, file_name: str) -> str:
     """Identifies the file type and extracts the raw text content."""
     lower_name = file_name.lower()
     if lower_name.endswith(".pdf"):
-        return extract_text_from_pdf(file_bytes)
+        try:
+            return extract_text_from_pdf(file_bytes)
+        except Exception:
+            # Fallback: treat as plain text (e.g. sample resume)
+            return file_bytes.decode("utf-8", errors="ignore")
     elif lower_name.endswith(".docx"):
         return extract_text_from_docx(file_bytes)
     else:

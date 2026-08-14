@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { useRouter } from "next/navigation";
 import {
   UploadCloud, FileText, CheckCircle2, Loader2,
-  AlertCircle, Info, ChevronRight,
+  AlertCircle, Info, ChevronRight, Sparkles,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { uploadResume, getSkillGaps, generateRoadmap } from "@/lib/api";
@@ -20,6 +20,64 @@ const TARGET_ROLES = [
   "DevOps / SRE Engineer", "Data Engineer", "Machine Learning Engineer",
   "Mobile Developer", "Cloud Solutions Architect",
 ];
+
+const SAMPLE_RESUME_TEXT = `Bhalani Smit
+Email: sbbhalani11@gmail.com | Contact: 9723267639
+GitHub: github.com/SBTechLab | LeetCode: leetcode.com/smit_18
+Location: Jamjodhpur, Jamnagar, Gujarat
+
+CAREER OBJECTIVE
+I want to work as a Front-End Web Developer & Mobile App Developer where I can use my technical skills and improve my knowledge while creating user-friendly websites.
+
+SKILLS
+Languages: C, C++, Java, Flutter, Dart, JavaScript
+Web: React.js (Beginner), HTML, CSS, Tailwind CSS
+Backend: Node.js, Express.js, Python, Django (basic)
+Database: MySQL, PostgreSQL, Supabase, Prisma ORM
+Tools: Git, GitHub, JWT Authentication, Nodemailer, Razorpay
+Mobile: Flutter
+
+INTERNSHIPS
+- Python Django Internship (15 Days): Learned backend web development using Python and Django.
+- Flutter Internship (45 Days): Developed mobile application UI using Flutter and Dart.
+- Algo-Master Internship (25 Days): Real-world implementation, preparing for coding interviews.
+
+EDUCATION
+10th Board - 2020 - Gujarat State Secondary Education Board - 83%
+Diploma in Computer Engineering - 2022-2025 - Government Polytechnic Gandhinagar - GTU - 8.59 CGPA
+B.Tech Computer Engineering - 2025-2028 - Chandubhai S. Patel Institute of Technology (Changa) - CHARUSAT - 7.43 SGPA (up to Sem 4)
+
+PROJECTS
+
+1. FoodWave (Mobile Application) - Diploma Project
+Tech: Flutter, Dart, Razorpay
+Developed a mobile application where users can browse food items and place orders. Implemented demo payment feature using Razorpay. Designed and developed the complete frontend of the mobile application.
+
+2. Academic Event Management System (Web Application) - B.Tech Sem 3
+Tech: React.js, Node.js, Express.js, Supabase, PostgreSQL, Tailwind CSS, JWT Authentication, Nodemailer
+Developed a full-stack web application to manage department events with role-based access for Admin, Faculty, Coordinator, and Student. Supports event creation, approval, student registration, and automatic email notifications. Developed backend, implemented JWT authentication, managed database using Supabase, and added email notification feature.
+
+3. SocietyOS: AI-Driven Society Management (Web Application) - B.Tech Sem 5 (Ongoing)
+Tech: React.js, Vite, JavaScript, Node.js, Express.js, PostgreSQL, Prisma ORM, Supabase, Tailwind CSS
+Developing a SaaS-based web application to digitally manage residential societies including residents, visitors, deliveries, notices, complaints, and society activities. Implementing role-based authentication, database management, and core society management modules.
+
+ACHIEVEMENTS
+- Certified: Introduction to Java (Coursera)
+- Certified: Java Class Library (Coursera)
+- Certified: Introduction to Software Product Management (Coursera)
+- Certified: Data Structures and Algorithm Analysis (Coursera)
+- Certified: Database Management (NPTEL)
+- Certified: Software Engineering (NPTEL)
+
+PERSONAL
+Nationality: Indian | Gender: Male | DOB: 20 November 2004
+Languages: Gujarati, Hindi, English
+`;
+
+function makeSampleFile(): File {
+  const blob = new Blob([SAMPLE_RESUME_TEXT], { type: "text/plain" });
+  return new File([blob], "sample_resume.pdf", { type: "application/pdf" });
+}
 
 export default function ResumeUploadPage() {
   const router = useRouter();
@@ -149,6 +207,20 @@ export default function ResumeUploadPage() {
             >
               Analyze my resume
               <ChevronRight size={20} />
+            </button>
+
+            {/* Sample Resume Option */}
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 h-px bg-surface-border" />
+              <span className="text-xs text-slate-500">or</span>
+              <div className="flex-1 h-px bg-surface-border" />
+            </div>
+            <button
+              onClick={() => setFile(makeSampleFile())}
+              className="btn-ghost w-full py-3 gap-2 text-sm border border-dashed border-brand-500/40 hover:border-brand-500/70"
+            >
+              <Sparkles size={16} className="text-brand-400" />
+              Use Sample Resume — no file needed
             </button>
           </div>
         )}

@@ -4,6 +4,7 @@ import {
   Zap, ArrowRight, BrainCircuit, Map, Lightbulb,
   MessageSquare, BarChart3, Upload, Star, CheckCircle2,
 } from "lucide-react";
+import LandingUserBar from "@/components/LandingUserBar";
 
 export const metadata: Metadata = {
   title: "SkillForge AI — Personalized Learning & Career Mentor",
@@ -106,6 +107,9 @@ export default function LandingPage() {
           Get started
         </Link>
       </header>
+
+      {/* Signed-in user bar */}
+      <LandingUserBar />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-28 text-center sm:px-6 lg:px-8 lg:pt-28">
