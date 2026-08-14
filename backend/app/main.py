@@ -16,7 +16,11 @@ app = FastAPI(
 # Allow Next.js frontend origin (default is http://localhost:3000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For hackathon/development speed. Can be restricted to specific domains.
+    allow_origins=[
+        "http://localhost:3000",
+        "https://skillforge-ai.vercel.app",
+        "https://*.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
