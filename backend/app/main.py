@@ -18,6 +18,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "https://skill-forge-ai-ivory.vercel.app",
         "https://*.vercel.app",
     ],
     allow_credentials=True,
