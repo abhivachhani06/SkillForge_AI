@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import pymupdf as fitz  # PyMuPDF
 import docx
 import io
 import logging
