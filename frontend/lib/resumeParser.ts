@@ -1,5 +1,23 @@
 import type { CareerProfile } from "./types";
 
+async function extractTextFromFile(file: File): Promise<string> {
+  if (file.type === "application/pdf") {
+    const pdfjsLib = await import("pdfjs-dist");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages = await Promise.all(
+      Array.from({ length: pdf.numPages }, (_, i) =>
+        pdf.getPage(i + 1).then((p) => p.getTextContent()).then((c) =>
+          c.items.map((item: any) => item.str).join(" ")
+        )
+      )
+    );
+    return pages.join("\n");
+  }
+  return file.text();
+}
+
 const KNOWN_SKILLS = [
   "JavaScript","TypeScript","React","React.js","Next.js","Node.js","Express","Express.js",
   "Python","Django","Flask","Java","C","C++","Dart","Flutter","Kotlin","Swift",
@@ -92,7 +110,7 @@ function extractEducation(text: string) {
 }
 
 export async function parseResumeFile(file: File): Promise<CareerProfile> {
-  const text = await file.text();
+  const text = await extractTextFromFile(file);
   const name = extractName(text);
   const skills = extractSkills(text);
   const experience = extractExperience(text);

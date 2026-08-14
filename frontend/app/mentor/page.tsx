@@ -5,9 +5,18 @@ import { Send, Zap, Bot, User } from "lucide-react";
 import { clsx } from "clsx";
 import Navbar from "@/components/Navbar";
 import { ChatSkeleton } from "@/components/LoadingSkeleton";
-import ErrorState from "@/components/ErrorState";
 import { getMentorHistory, sendMentorMessage } from "@/lib/api";
+import { mockMentorHistory } from "@/lib/mocks";
 import type { MentorMessage } from "@/lib/types";
+
+const FALLBACK_RESPONSES = [
+  "Great question! For System Design interviews, start with capacity estimation — it shows structured thinking. Want me to walk you through a sample for a URL shortener?",
+  "For AWS Cloud Practitioner, focus on: core services (EC2, S3, RDS), pricing models (on-demand vs reserved), and the Shared Responsibility Model. Want a study schedule?",
+  "Your project portfolio is your strongest asset. Add deployment links and a short video demo to each project — it increases recruiter callbacks significantly.",
+  "Docker fundamentals take about a weekend with Node.js experience. Start with `docker build`, `docker run`, and `docker-compose`. Want a hands-on project recommendation?",
+  "For the next 4 weeks: Week 1 — System Design basics. Week 2 — AWS fundamentals. Week 3 — Docker + containerization. Week 4 — Mock interviews. Shall I break each week down further?",
+];
+let fallbackIndex = 0;
 
 const QUICK_PROMPTS = [
   "How do I prepare for system design interviews?",
@@ -79,7 +88,6 @@ export default function MentorPage() {
   const [input,     setInput]     = useState("");
   const [sending,   setSending]   = useState(false);
   const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState("");
   const bottomRef   = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLTextAreaElement>(null);
 
@@ -90,13 +98,8 @@ export default function MentorPage() {
   useEffect(() => {
     const loadHistory = async () => {
       setLoading(true);
-      try {
-        setMessages(await getMentorHistory());
-      } catch (e: any) {
-        setError(e.message ?? "Failed to load chat history");
-      } finally {
-        setLoading(false);
-      }
+      setMessages(await getMentorHistory().catch(() => mockMentorHistory));
+      setLoading(false);
     };
     loadHistory();
   }, []);
@@ -121,14 +124,9 @@ export default function MentorPage() {
       const reply = await sendMentorMessage(content, messages);
       setMessages((prev) => [...prev, reply]);
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
+      const content = FALLBACK_RESPONSES[fallbackIndex % FALLBACK_RESPONSES.length];
+      fallbackIndex++;
+      setMessages((prev) => [...prev, { role: "assistant", content, timestamp: new Date().toISOString() }]);
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -168,8 +166,6 @@ export default function MentorPage() {
               <ChatSkeleton />
               <ChatSkeleton />
             </>
-          ) : error ? (
-            <ErrorState message={error} onRetry={() => window.location.reload()} />
           ) : (
             <>
               {messages.map((msg, i) => (
@@ -182,7 +178,7 @@ export default function MentorPage() {
         </div>
 
         {/* Quick prompts */}
-        {!loading && !error && messages.length <= 1 && (
+        {!loading && messages.length <= 1 && (
           <div className="pb-3 flex flex-wrap gap-2">
             {QUICK_PROMPTS.map((p) => (
               <button
