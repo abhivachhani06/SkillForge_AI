@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import { uploadResume, getSkillGaps, generateRoadmap } from "@/lib/api";
-import { mockSkillGaps } from "@/lib/mocks";
+import { mockSkillGaps, mockCareerProfile } from "@/lib/mocks";
 import { parseResumeFile } from "@/lib/resumeParser";
 import SkillBadge from "@/components/SkillBadge";
 import type { CareerProfile, SkillGap } from "@/lib/types";
@@ -86,7 +86,7 @@ export default function ResumeUploadPage() {
   const [file, setFile]         = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState(TARGET_ROLES[0]);
   const [profile, setProfile]   = useState<CareerProfile>(mockCareerProfile);
-  const [gaps, setGaps]         = useState<SkillGap[]>([]);
+  const [gaps, setGaps]         = useState<SkillGap[]>(mockSkillGaps);
   const [tooltip, setTooltip]   = useState<string | null>(null);
 
   const onDrop = useCallback((accepted: File[]) => {
@@ -103,14 +103,14 @@ export default function ResumeUploadPage() {
   const handleUpload = async () => {
     if (!file) return;
     setStage("analyzing");
-    const [careerResult, gapsResult] = await Promise.allSettled([
-      uploadResume(file, targetRole),
-      getSkillGaps(),
+    // Always parse locally first as guaranteed fallback
+    const [localParsed, careerResult, gapsResult] = await Promise.all([
+      parseResumeFile(file),
+      uploadResume(file, targetRole).catch(() => null),
+      getSkillGaps().catch(() => null),
     ]);
-    // If API fails, parse the file directly on the frontend
-    const parsedLocally = careerResult.status === "rejected" ? await parseResumeFile(file) : null;
-    setProfile(careerResult.status === "fulfilled" ? careerResult.value : parsedLocally!);
-    setGaps(gapsResult.status === "fulfilled" ? gapsResult.value : mockSkillGaps);
+    setProfile(careerResult ?? localParsed);
+    setGaps(gapsResult ?? mockSkillGaps);
     await generateRoadmap(targetRole).catch(() => {});
     setStage("results");
   };
