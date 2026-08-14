@@ -84,7 +84,7 @@ export default function ResumeUploadPage() {
   const [stage, setStage]       = useState<Stage>("upload");
   const [file, setFile]         = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState(TARGET_ROLES[0]);
-  const [profile, setProfile]   = useState<CareerProfile | null>(null);
+  const [profile, setProfile]   = useState<CareerProfile>(mockCareerProfile);
   const [gaps, setGaps]         = useState<SkillGap[]>([]);
   const [tooltip, setTooltip]   = useState<string | null>(null);
 
@@ -237,8 +237,8 @@ export default function ResumeUploadPage() {
           </div>
         )}
 
-        {/* ── Results Stage ── */
-        {stage === "results" && profile && (
+        {/* ── Results Stage ── */}
+        {stage === "results" && (
           <div className="space-y-6 animate-fade-in">
             {/* Career Profile */}
             <div className="glass-card p-6">
